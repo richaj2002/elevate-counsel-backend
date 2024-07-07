@@ -5,7 +5,7 @@ import sendEmail from '../utils/email.js';
 import path from 'path';
 import { responseRenderer } from '../utils/responseRenderer.js';
 
-const { User } = models;
+const { User, Specialization } = models;
 
 export const register = async (req, res) => {
     const {
@@ -16,10 +16,17 @@ export const register = async (req, res) => {
         country,
         counselorTitle,
         counselorDescription,
+        specializationIds,
     } = req.body;
     try {
-        const defaultProfile =
-            'http://localhost:3000/uploads/default-profile.webp';
+        const userExists = await User.findAll({ where: { email } });
+        if (userExists.length > 0) {
+            return responseRenderer(res, 500, 'Email already registered.');
+        }
+
+        const defaultProfile = `${req.protocol}://${req.get(
+            'host'
+        )}/uploads/default-profile.webp`;
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await User.create({
             name,
@@ -32,6 +39,15 @@ export const register = async (req, res) => {
             profilePhoto: defaultProfile,
         });
 
+        if (specializationIds && specializationIds.length > 0) {
+            const specializations = await Specialization.findAll({
+                where: {
+                    id: specializationIds,
+                },
+            });
+            await user.addSpecializations(specializations);
+        }
+
         const verificationToken = jwt.sign(
             { id: user.id, role: user.role },
             process.env.JWT_SECRET,
@@ -41,13 +57,14 @@ export const register = async (req, res) => {
         // Define the path to the HTML template
         const templatePath = path.join(
             process.cwd(),
-            '../server/utils/templates/verificationEmail.html'
+            'utils/templates/verificationEmail.html'
         );
 
         // Send verification email
         await sendEmail(email, 'Please verify your email.', templatePath, {
             name: user.name,
             token: verificationToken,
+            baseUrl: `${req.protocol}://${req.get('host')}`,
         });
 
         responseRenderer(
@@ -114,19 +131,19 @@ export const login = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
     const { token } = req.params;
+    const frontendSignInUrl = process.env.FRONTEND_URL_SIGN_IN;
     try {
         const { id } = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findByPk(id);
         if (!user) {
-            return responseRenderer(res, 400, 'Invalid token.');
+            return res.redirect(`${frontendSignInUrl}?emailVerified=false`);
         }
 
         user.isEmailVerified = true;
         await user.save();
-
-        responseRenderer(res, 200, 'Email verified successfully.');
-    } catch (error) {
-        responseRenderer(res, 400, 'Invalid token.', null, error.message);
+        res.redirect(`${frontendSignInUrl}?emailVerified=true`);
+    } catch {
+        res.redirect(`${frontendSignInUrl}?emailVerified=false`);
     }
 };
 

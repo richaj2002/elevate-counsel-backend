@@ -20,12 +20,15 @@ const sendEmail = async (to, subject, templatePath, replacements) => {
         // Replace placeholders with actual values
         let html = template;
         for (const key in replacements) {
-            html = html.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
+            html = html.replace(
+                new RegExp(`{{${key}}}`, 'g'),
+                replacements[key]
+            );
         }
 
         // Send mail with defined transport object
         const info = await transporter.sendMail({
-            from: '"Your Name" <your-email@example.com>',
+            from: '"Elevate Counsel" <elevate.counsel@gmail.com>',
             to,
             subject,
             html,

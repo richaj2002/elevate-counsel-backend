@@ -10,29 +10,50 @@ export const getSlots = async (req, res) => {
                 include: {
                     model: User,
                     as: 'counselorDetails',
-                    attributes: ['id', 'name']
+                    attributes: ['id', 'name'],
                 },
             });
         } else {
             slots = await Slot.findAll({
-                where: { counselorId: req.user.id }
+                where: { counselorId: req.user.id },
             });
         }
         responseRenderer(res, 200, '', slots);
     } catch (error) {
-        responseRenderer(res, 500, 'Failed to fetch slots.', null, error.message);
+        responseRenderer(
+            res,
+            500,
+            'Failed to fetch slots.',
+            null,
+            error.message
+        );
     }
-}
+};
 
 export const getCounselorSlots = async (req, res) => {
     try {
         const counselorId = req.params.id;
         const counselor = await User.findByPk(counselorId, {
-            attributes: ['id', 'name', 'counselorTitle', 'counselorDescription', 'country', 'profilePhoto'],
+            attributes: [
+                'id',
+                'name',
+                'counselorTitle',
+                'counselorDescription',
+                'country',
+                'profilePhoto',
+            ],
             include: {
                 model: Slot,
                 as: 'slots',
-                attributes: ['id', 'startTime', 'endTime', 'description', 'maxSlotSize', 'isOneOnOneSession', 'status'],
+                attributes: [
+                    'id',
+                    'startTime',
+                    'endTime',
+                    'description',
+                    'maxSlotSize',
+                    'isOneOnOneSession',
+                    'status',
+                ],
                 where: { status: 'active' },
                 required: false,
                 include: {
@@ -40,9 +61,9 @@ export const getCounselorSlots = async (req, res) => {
                     as: 'appointments',
                     attributes: ['id'],
                     where: { status: 'booked' },
-                    required: false
-                }
-            }
+                    required: false,
+                },
+            },
         });
 
         if (!counselor) {
@@ -52,14 +73,17 @@ export const getCounselorSlots = async (req, res) => {
         counselor.individualSlots = [];
         counselor.groupSlots = [];
 
-        counselor.slots.forEach(slot => {
-            const appointmentsBooked = slot.appointments ? slot.appointments.length : 0;
-            const bookingPercentage = (appointmentsBooked / slot.maxSlotSize) * 100;
+        counselor.slots.forEach((slot) => {
+            const appointmentsBooked = slot.appointments
+                ? slot.appointments.length
+                : 0;
+            const bookingPercentage =
+                (appointmentsBooked / slot.maxSlotSize) * 100;
 
             const slotWithBookingInfo = {
                 ...slot.get({ plain: true }),
                 appointmentsBooked,
-                bookingPercentage
+                bookingPercentage,
             };
 
             if (slot.isOneOnOneSession) {
@@ -77,12 +101,18 @@ export const getCounselorSlots = async (req, res) => {
             country: counselor.country,
             profilePhoto: counselor.profilePhoto,
             individualSlots: counselor.individualSlots,
-            groupSlots: counselor.groupSlots
+            groupSlots: counselor.groupSlots,
         });
     } catch (error) {
-        responseRenderer(res, 500, 'Failed to fetch counselor slots.', null, error.message);
+        responseRenderer(
+            res,
+            500,
+            'Failed to fetch counselor slots.',
+            null,
+            error.message
+        );
     }
-}
+};
 
 export const getSlot = async (req, res) => {
     try {
@@ -93,20 +123,34 @@ export const getSlot = async (req, res) => {
         }
         responseRenderer(res, 200, '', slot);
     } catch (error) {
-        responseRenderer(res, 500, 'Failed to fetch slot.', null, error.message);
+        responseRenderer(
+            res,
+            500,
+            'Failed to fetch slot.',
+            null,
+            error.message
+        );
     }
-}
+};
 
 export const addSlot = async (req, res) => {
     try {
         const counselorId = req.user.id;
-        const { appointmentURL, startTime, endTime, description, maxSlotSize } = req.body;
-        const slot = await Slot.create({ counselorId, appointmentURL, startTime, endTime, description, maxSlotSize });
+        const { appointmentURL, startTime, endTime, description, maxSlotSize } =
+            req.body;
+        const slot = await Slot.create({
+            counselorId,
+            appointmentURL,
+            startTime,
+            endTime,
+            description,
+            maxSlotSize,
+        });
         responseRenderer(res, 201, 'Slot created successfully.', slot);
     } catch (error) {
         responseRenderer(res, 500, 'Failed to add slot.', null, error.message);
     }
-}
+};
 
 export const updateSlot = async (req, res) => {
     try {
@@ -119,7 +163,11 @@ export const updateSlot = async (req, res) => {
         }
 
         if (slot.counselor !== req.user.id) {
-            return responseRenderer(res, 403, 'You do not have permission to update this slot.');
+            return responseRenderer(
+                res,
+                403,
+                'You do not have permission to update this slot.'
+            );
         }
 
         await slot.update(updates);
@@ -131,6 +179,12 @@ export const updateSlot = async (req, res) => {
 
         responseRenderer(res, 200, 'Slot updated successfully.', slot);
     } catch (error) {
-        responseRenderer(res, 500, 'Failed to update slot.', null, error.message);
+        responseRenderer(
+            res,
+            500,
+            'Failed to update slot.',
+            null,
+            error.message
+        );
     }
 };
