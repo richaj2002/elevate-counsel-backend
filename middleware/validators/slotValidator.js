@@ -28,6 +28,14 @@ export const validateSlot = [
         .withMessage('Invalid slot size')
         .notEmpty()
         .withMessage('Please enter slot size'),
+    body('specialization')
+        .notEmpty()
+        .withMessage('Please select specialization'),
+    body('isOneOnOneSession')
+        .isBoolean()
+        .withMessage('Invalid slot type')
+        .notEmpty()
+        .withMessage('Please select slot type'),
 
     (req, res, next) => {
         const errors = validationResult(req);

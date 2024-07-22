@@ -1,6 +1,7 @@
 import express from 'express';
 import {
     getSlots,
+    getSlotsForCounselorDashboard,
     getSlot,
     addSlot,
     updateSlot,
@@ -20,6 +21,12 @@ slotRouter.get(
     authenticateJWT,
     authorizeRoles('admin', 'counselor'),
     getSlots
+);
+slotRouter.get(
+    '/counselor/dashboard',
+    authenticateJWT,
+    authorizeRoles('counselor'),
+    getSlotsForCounselorDashboard
 );
 slotRouter.get(
     '/:id',

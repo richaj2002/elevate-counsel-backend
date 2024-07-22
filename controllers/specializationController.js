@@ -1,6 +1,6 @@
 import models from '../models/index.js';
 import { responseRenderer } from '../utils/responseRenderer.js';
-const { Specialization } = models;
+const { User, Specialization } = models;
 
 export const getSpecializations = async (req, res) => {
     try {
@@ -13,6 +13,45 @@ export const getSpecializations = async (req, res) => {
             res,
             500,
             'Failed to fetch specializations.',
+            null,
+            error.message
+        );
+    }
+};
+
+export const getCounselorSpecializations = async (req, res) => {
+    try {
+        const counselorId = req.user.id;
+
+        const counselor = await User.findByPk(counselorId, {
+            include: {
+                model: Specialization,
+                through: 'UserSpecializations',
+                as: 'specializations',
+                attributes: ['id', 'name'],
+            },
+        });
+
+        if (!counselor) {
+            return responseRenderer(res, 404, 'Counselor not found.');
+        }
+
+        const specializations = counselor.specializations.map((spec) => ({
+            id: spec.id,
+            name: spec.name,
+        }));
+
+        responseRenderer(
+            res,
+            200,
+            'Counselor specializations fetched successfully.',
+            specializations
+        );
+    } catch (error) {
+        responseRenderer(
+            res,
+            500,
+            'Failed to fetch counselor specializations.',
             null,
             error.message
         );

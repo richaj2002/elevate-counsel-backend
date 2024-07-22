@@ -1,6 +1,7 @@
 import express from 'express';
 import {
     getSpecializations,
+    getCounselorSpecializations,
     addSpecialization,
     updateSpecialization,
     deleteSpecialization,
@@ -11,6 +12,12 @@ import { authorizeRoles } from '../middleware/roleMiddleware.js';
 const specializationRouter = express.Router();
 
 specializationRouter.get('/', getSpecializations);
+specializationRouter.get(
+    '/counselor',
+    authenticateJWT,
+    authorizeRoles('counselor'),
+    getCounselorSpecializations
+);
 specializationRouter.post(
     '/',
     authenticateJWT,

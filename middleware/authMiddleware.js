@@ -4,12 +4,13 @@ import models from '../models/index.js';
 const { User } = models;
 
 export const authenticateJWT = async (req, res, next) => {
-    const token = req.header('Authorization');
-    if (!token) {
+    const authHeader = req.header('Authorization');
+    if (!authHeader) {
         return responseRenderer(res, 401, 'Access Denied');
     }
-
+    const token = authHeader.split(' ')[1];
     try {
+        console.log(token);
         const verified = jwt.verify(token, process.env.JWT_SECRET);
 
         req.user = await User.findByPk(verified.id);

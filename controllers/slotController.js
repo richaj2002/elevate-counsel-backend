@@ -1,6 +1,6 @@
 import models from '../models/index.js';
 import { responseRenderer } from '../utils/responseRenderer.js';
-const { User, Slot, Appointment } = models;
+const { User, Slot, Appointment, Specialization } = models;
 
 export const getSlots = async (req, res) => {
     try {
@@ -24,6 +24,87 @@ export const getSlots = async (req, res) => {
             res,
             500,
             'Failed to fetch slots.',
+            null,
+            error.message
+        );
+    }
+};
+
+export const getSlotsForCounselorDashboard = async (req, res) => {
+    try {
+        const counselorId = req.user.id;
+        const slots = await Slot.findAll({
+            attributes: [
+                'id',
+                'startTime',
+                'endTime',
+                'description',
+                'maxSlotSize',
+                'isOneOnOneSession',
+                'status',
+                'createdAt',
+                'updatedAt',
+            ],
+            where: { counselorId },
+            include: [
+                {
+                    model: Appointment,
+                    as: 'appointments',
+                    attributes: ['id'],
+                    where: { status: 'booked' },
+                    required: false,
+                },
+                {
+                    model: Specialization,
+                    as: 'specialization',
+                    required: true,
+                },
+            ],
+            order: [['startTime', 'ASC']],
+        });
+
+        const slotStatusCategories = {
+            active: [],
+            running: [],
+            cancelled: [],
+            completed: [],
+        };
+
+        slots.forEach((slot) => {
+            const appointmentsBooked = slot.appointments
+                ? slot.appointments.length
+                : 0;
+            const bookingPercentage =
+                (appointmentsBooked / slot.maxSlotSize) * 100;
+
+            const updatedSlot = {
+                ...slot.toJSON(),
+                appointmentsBooked,
+                bookingPercentage,
+                specializationName: slot.specialization.name,
+            };
+
+            delete updatedSlot.appointments;
+            delete updatedSlot.specialization;
+
+            if (slotStatusCategories[slot.status]) {
+                slotStatusCategories[slot.status].push(updatedSlot);
+            } else {
+                slotStatusCategories[slot.status] = [updatedSlot];
+            }
+        });
+
+        responseRenderer(
+            res,
+            200,
+            'Slots fetched successfully',
+            slotStatusCategories
+        );
+    } catch (error) {
+        responseRenderer(
+            res,
+            500,
+            'Failed to fetch counselor slots.',
             null,
             error.message
         );
@@ -136,15 +217,25 @@ export const getSlot = async (req, res) => {
 export const addSlot = async (req, res) => {
     try {
         const counselorId = req.user.id;
-        const { appointmentURL, startTime, endTime, description, maxSlotSize } =
-            req.body;
-        const slot = await Slot.create({
-            counselorId,
+        const {
             appointmentURL,
             startTime,
             endTime,
             description,
             maxSlotSize,
+            specialization,
+            isOneOnOneSession,
+        } = req.body;
+        const slot = await Slot.create({
+            counselorId,
+            specializationId: specialization,
+            appointmentURL,
+            startTime,
+            endTime,
+            description,
+            maxSlotSize,
+            isOneOnOneSession,
+            status: 'active',
         });
         responseRenderer(res, 201, 'Slot created successfully.', slot);
     } catch (error) {

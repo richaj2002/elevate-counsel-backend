@@ -16,7 +16,7 @@ export const register = async (req, res) => {
         country,
         counselorTitle,
         counselorDescription,
-        specializationIds,
+        specialization,
     } = req.body;
     try {
         const userExists = await User.findAll({ where: { email } });
@@ -38,11 +38,10 @@ export const register = async (req, res) => {
             counselorDescription,
             profilePhoto: defaultProfile,
         });
-
-        if (specializationIds && specializationIds.length > 0) {
+        if (specialization && specialization.length > 0) {
             const specializations = await Specialization.findAll({
                 where: {
-                    id: specializationIds,
+                    id: specialization,
                 },
             });
             await user.addSpecializations(specializations);
