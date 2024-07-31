@@ -10,6 +10,7 @@ import {
 import { authenticateJWT } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 import upload from '../middleware/upload.js';
+import { validateUpdateUser } from '../middleware/validators/userValidators.js';
 
 const userRouter = express.Router();
 
@@ -25,6 +26,7 @@ userRouter.put(
     '/:id',
     authenticateJWT,
     authorizeRoles('admin', 'user', 'counselor'),
+    validateUpdateUser,
     updateUser
 );
 userRouter.put(

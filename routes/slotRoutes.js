@@ -34,7 +34,7 @@ slotRouter.get(
     authorizeRoles('admin', 'counselor'),
     getSlot
 );
-slotRouter.get('counselor/:id', getCounselorSlots);
+slotRouter.get('/counselor/:id', getCounselorSlots);
 slotRouter.post(
     '/',
     authenticateJWT,

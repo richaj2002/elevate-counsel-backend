@@ -1,5 +1,6 @@
 import models from '../models/index.js';
 import bcrypt from 'bcryptjs';
+import { counselorDemoData } from './counselorDemoData.js';
 const { User, Specialization } = models;
 
 export const insertDefaultSpecializationData = async () => {
@@ -47,5 +48,48 @@ export const createAdmin = async () => {
         }
     } catch (error) {
         console.error('Error creating admin:', error);
+    }
+};
+
+export const createDemoCounselors = async () => {
+    try {
+        const counselors = await User.findAll({ where: { role: 'counselor' } });
+        if (counselors.length <= 5) {
+            for (const [index, counselor] of counselorDemoData.entries()) {
+                try {
+                    const user = await User.create({
+                        name: counselor.name,
+                        email: `bindabhishek22+${index + 1}@gmail.com`,
+                        password: await bcrypt.hash('Yahoo@123', 10),
+                        role: 'counselor',
+                        country: 'India',
+                        counselorTitle: counselor.counselorTitle,
+                        counselorDescription: counselor.counselorDescription,
+                        profilePhoto:
+                            'http://localhost:3000/uploads/default-profile.webp',
+                        isEmailVerified: true,
+                    });
+
+                    if (
+                        counselor.specializations &&
+                        counselor.specializations.length > 0
+                    ) {
+                        const specializations = await Specialization.findAll({
+                            where: {
+                                id: counselor.specializations,
+                            },
+                        });
+                        await user.addSpecializations(specializations);
+                    }
+                } catch (error) {
+                    console.error(
+                        `Error creating counselor ${counselor.name}:`,
+                        error
+                    );
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error creating counselors:', error);
     }
 };

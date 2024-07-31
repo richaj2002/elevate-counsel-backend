@@ -10,6 +10,7 @@ import { sequelize } from './config/database.js';
 import {
     insertDefaultSpecializationData,
     createAdmin,
+    createDemoCounselors,
 } from './config/insertDefaultData.js';
 
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/specialization', specializationRouter);
 
         await insertDefaultSpecializationData();
         await createAdmin();
+        await createDemoCounselors();
 
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {

@@ -197,12 +197,47 @@ export const getCounselorSlots = async (req, res) => {
 
 export const getSlot = async (req, res) => {
     try {
+        const userId = req.user.id;
         const slotId = req.params.id;
-        const slot = await Slot.findByPk(slotId);
-        if (!slot) {
+        const slot = await Slot.findByPk(slotId, {
+            attributes: [
+                'id',
+                'counselorId',
+                'startTime',
+                'endTime',
+                'appointmentURL',
+                'description',
+                'maxSlotSize',
+                'isOneOnOneSession',
+                'status',
+                'createdAt',
+                'updatedAt',
+            ],
+            include: [
+                {
+                    model: Appointment,
+                    as: 'appointments',
+                    attributes: ['status'],
+                    required: false,
+                    include: {
+                        model: User,
+                        as: 'user',
+                        attributes: ['name', 'email'],
+                        required: true,
+                    },
+                },
+                {
+                    model: Specialization,
+                    as: 'specialization',
+                    attributes: ['name'],
+                    required: true,
+                },
+            ],
+        });
+        if (!slot || slot.counselorId !== userId) {
             return responseRenderer(res, 404, 'Slot not found.');
         }
-        responseRenderer(res, 200, '', slot);
+        responseRenderer(res, 200, 'Slot fetched successfully.', slot);
     } catch (error) {
         responseRenderer(
             res,

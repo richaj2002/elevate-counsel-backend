@@ -9,8 +9,8 @@ const User = UserModel(sequelize);
 const Slot = SlotModel(sequelize);
 const Appointment = AppointmentModel(sequelize);
 
-User.hasMany(Slot, { foreignKey: 'counselorId' });
-Slot.belongsTo(User, { foreignKey: 'counselorId' });
+User.hasMany(Slot, { as: 'slots', foreignKey: 'counselorId' });
+Slot.belongsTo(User, { as: 'counselor', foreignKey: 'counselorId' });
 
 Slot.belongsTo(Specialization, {
     as: 'specialization',
@@ -18,13 +18,13 @@ Slot.belongsTo(Specialization, {
 });
 
 User.hasMany(Appointment, { foreignKey: 'userId' });
-Appointment.belongsTo(User, { foreignKey: 'userId' });
+Appointment.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 
 User.hasMany(Appointment, { foreignKey: 'counselorId' });
-Appointment.belongsTo(User, { foreignKey: 'counselorId' });
+Appointment.belongsTo(User, { as: 'counselor', foreignKey: 'counselorId' });
 
 Slot.hasMany(Appointment, { as: 'appointments', foreignKey: 'slotId' });
-Appointment.belongsTo(Slot, { foreignKey: 'slotId' });
+Appointment.belongsTo(Slot, { as: 'slot', foreignKey: 'slotId' });
 
 User.belongsToMany(Specialization, {
     through: 'UserSpecializations',

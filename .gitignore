@@ -25,3 +25,5 @@ node_modules/
 
 # Development environment specifics
 .DS_Store
+
+uploads
